@@ -33,58 +33,39 @@ function CRScanAttendance() {
 
   /* ---------------- PDF DOWNLOAD (FIXED & SAFE) ---------------- */
   const downloadPDF = async (type) => {
-    try {
-      const token = localStorage.getItem("token");
+  try {
+    const res = await api.get(
+      `/cr/attendance/daily/export/${type}/pdf`,
+      { responseType: "blob" }
+    );
 
-      if (!token) {
-        alert("Session expired. Please login again.");
-        return;
-      }
-
-      const res = await fetch(
-        `${import.meta.env.VITE_API_BASE_URL}/cr/attendance/daily/export/${type}/pdf`,
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (!res.ok) {
-        const text = await res.text();
-        console.error("PDF EXPORT FAILED:", text);
-        alert("Failed to export PDF");
-        return;
-      }
-
-      const contentType = res.headers.get("content-type");
-      if (!contentType || !contentType.includes("application/pdf")) {
-        const text = await res.text();
-        console.error("NOT A PDF RESPONSE:", text);
-        alert("Export failed. Please login again and retry.");
-        return;
-      }
-
-      const blob = await res.blob();
-      const url = window.URL.createObjectURL(blob);
-
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `${type}_attendance_${new Date()
-        .toISOString()
-        .slice(0, 10)}.pdf`;
-
-      document.body.appendChild(a);
-      a.click();
-
-      a.remove();
-      window.URL.revokeObjectURL(url);
-    } catch (err) {
-      console.error("PDF DOWNLOAD ERROR:", err);
-      alert("Failed to download PDF");
+    const contentType = res.headers["content-type"];
+    if (!contentType || !contentType.includes("application/pdf")) {
+      alert("Export failed. Please login again.");
+      return;
     }
-  };
+
+    const url = window.URL.createObjectURL(
+      new Blob([res.data], { type: "application/pdf" })
+    );
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${type}_attendance_${new Date()
+      .toISOString()
+      .slice(0, 10)}.pdf`;
+
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+
+    window.URL.revokeObjectURL(url);
+  } catch (err) {
+    console.error("PDF DOWNLOAD ERROR:", err);
+    alert("Failed to download PDF");
+  }
+};
+
 
   return (
     <div className="cr-scan-page">
