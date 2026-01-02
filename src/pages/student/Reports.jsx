@@ -10,10 +10,7 @@ function Reports() {
 
   /* ===== MOCK DATA (KEEP AS IS) ===== */
   const subjects = [
-    { name: "DBMS", percent: 78 },
-    { name: "AI", percent: 85 },
-    { name: "OOPS", percent: 74 },
-    { name: "DPCO", percent: 69 },
+    
   ];
 
   const slotHistory = [
