@@ -14,38 +14,11 @@ function Reports() {
   ];
 
   const slotHistory = [
-    {
-      date: "2025-12-01",
-      slot: "Slot 2",
-      subject: "AI",
-      status: "Absent",
-    },
-    {
-      date: "2025-12-05",
-      slot: "Slot 4",
-      subject: "DBMS",
-      status: "OD",
-    },
+    
   ];
 
   const odHistory = [
-    {
-      date: "2025-12-03",
-      category: "Full Day",
-      status: "Pending",
-    },
-    {
-      date: "2025-12-07",
-      category: "Slot-wise",
-      slot: "Slot 3",
-      status: "Approved",
-    },
-    {
-      date: "2025-12-12",
-      category: "Slot-wise",
-      slot: "Slot 2",
-      status: "Rejected",
-    },
+    
   ];
 
   const [tab, setTab] = useState("daily");
