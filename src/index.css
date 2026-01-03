@@ -2456,3 +2456,20 @@ button.primary-btn {
   color: #16a34a;
   font-weight: 600;
 }
+
+.cr-student-row {
+  display: grid;
+  grid-template-columns: 1.5fr 2fr 0.7fr 0.7fr;
+  align-items: center;
+  gap: 10px;
+}
+
+.cr-student-row.header {
+  font-weight: 600;
+  background: #f8fafc;
+  border-radius: 6px;
+}
+
+.center {
+  text-align: center;
+}

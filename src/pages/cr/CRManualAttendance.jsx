@@ -1,44 +1,36 @@
 import { useEffect, useState } from "react";
 import api from "../../api/api";
+import Popup from "../../components/Popup"; // ✅ Presenza popup
+import { FaCheckCircle } from "react-icons/fa";
 
-export default function CRManualAttendance() {
+function CRManualAttendance() {
   const [students, setStudents] = useState([]);
   const [records, setRecords] = useState({});
+  const [popup, setPopup] = useState({ show: false, type: "", message: "" });
   const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
 
-  // Fetch student list
+  /* ---------------- FETCH STUDENTS ---------------- */
   useEffect(() => {
     api
       .get("/cr/attendance/daily/manual/students")
-      .then((res) => {
-        setStudents(res.data.students);
-        setLoading(false);
-      })
-      .catch(() => {
-        alert("Failed to load students");
-        setLoading(false);
-      });
+      .then((res) => setStudents(res.data.students))
+      .catch(() =>
+        setPopup({
+          show: true,
+          type: "error",
+          message: "Failed to load students",
+        })
+      )
+      .finally(() => setLoading(false));
   }, []);
 
-  // Handle selection
+  /* ---------------- UPDATE STATUS ---------------- */
   const updateStatus = (roll, status) => {
-    setRecords((prev) => {
-      const copy = { ...prev };
-      if (!status) delete copy[roll];
-      else copy[roll] = status;
-      return copy;
-    });
+    setRecords((prev) => ({ ...prev, [roll]: status }));
   };
 
-  // Submit attendance
-  const handleSubmit = async () => {
-    if (!confirm("Submit today's attendance? Unticked students will be ABSENT.")) {
-      return;
-    }
-
-    setSubmitting(true);
-
+  /* ---------------- SUBMIT ---------------- */
+  const submitAttendance = async () => {
     const payload = {
       records: Object.entries(records).map(([roll, status]) => ({
         roll_number: roll,
@@ -48,88 +40,80 @@ export default function CRManualAttendance() {
 
     try {
       await api.post("/cr/attendance/daily/manual/bulk", payload);
-      alert("Attendance submitted successfully");
-    } catch (err) {
-      alert("Failed to submit attendance");
-    } finally {
-      setSubmitting(false);
+      setPopup({
+        show: true,
+        type: "success",
+        message: "Manual attendance submitted successfully",
+      });
+    } catch {
+      setPopup({
+        show: true,
+        type: "error",
+        message: "Attendance submission failed",
+      });
     }
   };
 
-  if (loading) {
-    return <div className="p-6 text-center">Loading students…</div>;
-  }
+  if (loading) return <p className="muted">Loading students…</p>;
 
   return (
-    <div className="p-6 max-w-5xl mx-auto">
-      {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-indigo-600">
-          Manual Attendance
-        </h1>
-        <p className="text-sm text-slate-500">
-          Date: {new Date().toLocaleDateString("en-GB")}
-        </p>
+    <div className="cr-scan-page">
+      <h2>Manual Attendance</h2>
+      <p className="muted">
+        Date: {new Date().toLocaleDateString("en-GB")}
+      </p>
+
+      {/* TABLE HEADER */}
+      <div className="cr-student-row header">
+        <span>Roll No</span>
+        <span>Name</span>
+        <span className="center">Present</span>
+        <span className="center">OD</span>
       </div>
 
-      {/* Checklist */}
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200">
-        <table className="w-full">
-          <thead className="bg-slate-100 text-left">
-            <tr>
-              <th className="p-3">Roll No</th>
-              <th className="p-3">Name</th>
-              <th className="p-3 text-center">Present</th>
-              <th className="p-3 text-center">OD</th>
-            </tr>
-          </thead>
-          <tbody>
-            {students.map((s) => (
-              <tr
-                key={s.roll_number}
-                className="border-t hover:bg-slate-50"
-              >
-                <td className="p-3 font-medium">{s.roll_number}</td>
-                <td className="p-3">{s.name}</td>
+      {/* STUDENT LIST */}
+      {students.map((s) => (
+        <div key={s.roll_number} className="cr-student-row">
+          <span>{s.roll_number}</span>
+          <span>{s.name}</span>
 
-                {/* PRESENT */}
-                <td className="p-3 text-center">
-                  <input
-                    type="radio"
-                    name={s.roll_number}
-                    checked={records[s.roll_number] === "PRESENT"}
-                    onChange={() =>
-                      updateStatus(s.roll_number, "PRESENT")
-                    }
-                  />
-                </td>
+          <span className="center">
+            <input
+              type="radio"
+              name={s.roll_number}
+              checked={records[s.roll_number] === "PRESENT"}
+              onChange={() => updateStatus(s.roll_number, "PRESENT")}
+            />
+          </span>
 
-                {/* OD */}
-                <td className="p-3 text-center">
-                  <input
-                    type="radio"
-                    name={s.roll_number}
-                    checked={records[s.roll_number] === "OD"}
-                    onChange={() => updateStatus(s.roll_number, "OD")}
-                  />
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+          <span className="center">
+            <input
+              type="radio"
+              name={s.roll_number}
+              checked={records[s.roll_number] === "OD"}
+              onChange={() => updateStatus(s.roll_number, "OD")}
+            />
+          </span>
+        </div>
+      ))}
 
-      {/* Submit */}
-      <div className="mt-6 flex justify-end">
-        <button
-          disabled={submitting}
-          onClick={handleSubmit}
-          className="px-6 py-2 rounded-lg bg-indigo-600 text-white font-medium hover:bg-indigo-700 disabled:opacity-50"
-        >
-          {submitting ? "Submitting…" : "Submit Attendance"}
+      {/* SUBMIT BUTTON */}
+      <div className="cr-actions">
+        <button className="primary-btn" onClick={submitAttendance}>
+          <FaCheckCircle /> Submit Attendance
         </button>
       </div>
+
+      {/* POPUP */}
+      {popup.show && (
+        <Popup
+          type={popup.type}
+          message={popup.message}
+          onClose={() => setPopup({ show: false })}
+        />
+      )}
     </div>
   );
 }
 
+export default CRManualAttendance;
