@@ -133,19 +133,18 @@ function CRManualAttendance() {
 
       {/* POPUP */}
       {popup.show && (
-        <Popup
-          type={popup.type}
-          message={popup.message}
-          onClose={() => {
-            setPopup({ show: false, type: "", message: "" });
+  <Popup
+    type={popup.type}
+    message={popup.message}
+    onClose={() => {
+      setPopup({ show: false, type: "", message: "" });
 
-            // ✅ Redirect ONLY after success
-            if (popup.type === "success") {
-              navigate("/student/cr/manual-attendance");
-            }
-          }}
-        />
-      )}
+      // ✅ ALWAYS redirect to Manual Attendance page
+      window.location.href = "/student/cr/manual-attendance";
+    }}
+  />
+)}
+
     </div>
   );
 }
