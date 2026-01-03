@@ -122,13 +122,14 @@ function CRScanAttendance() {
       )}
 
       {present.map((s, i) => (
-        <div key={i} className="cr-student-row">
-          <span>
-            <strong>{s.roll_number}</strong> – {s.name}
-          </span>
-          <span className="present">{s.time}</span>
-        </div>
-      ))}
+  <div key={i} className="cr-student-row single-line">
+    <span className="student-text">
+      <strong>{s.roll_number}</strong> - {s.name}
+    </span>
+    <span className="present-time">{s.time}</span>
+  </div>
+))}
+
     </div>
   );
 }

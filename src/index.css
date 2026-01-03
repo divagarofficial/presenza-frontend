@@ -2473,3 +2473,23 @@ button.primary-btn {
 .center {
   text-align: center;
 }
+/* One-line present student row */
+.cr-student-row.single-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.student-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+}
+
+.present-time {
+  white-space: nowrap;
+  font-weight: 600;
+  color: #22c55e; /* Presenza green */
+}
