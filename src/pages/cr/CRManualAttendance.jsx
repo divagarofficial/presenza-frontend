@@ -132,18 +132,17 @@ function CRManualAttendance() {
       </div>
 
       {/* POPUP */}
-      {popup.show && (
-  <Popup
-    type={popup.type}
-    message={popup.message}
-    onClose={() => {
-      setPopup({ show: false, type: "", message: "" });
+      <Popup
+  type={popup.type}
+  message={popup.message}
+  actionText="OK"
+  onAction={() => {
+    setPopup({ show: false, type: "", message: "" });
 
-      // ✅ ALWAYS redirect to Manual Attendance page
-      window.location.href = "/student/cr/manual-attendance";
-    }}
-  />
-)}
+    // ✅ ALWAYS redirect to Manual Attendance page
+    window.location.href = "/student/cr/manual-attendance";
+  }}
+/>
 
     </div>
   );
