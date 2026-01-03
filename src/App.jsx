@@ -22,6 +22,7 @@ import CRScanAttendance from "./pages/cr/CRScanAttendance";
 import CRODApproval from "./pages/cr/CRODApproval";
 import CRGrievances from "./pages/cr/CRGrievances";
 import CRScanPage from "./pages/cr/CRScanPage";
+import CRManualAttendance from "./pages/cr/CRManualAttendance";
 
 /* ===== ADMIN ===== */
 import AdminDashboardLayout from "./layouts/AdminDashboardLayout";
@@ -96,6 +97,7 @@ function App() {
             <Route path="cr/od" element={<CRODApproval />} />
             <Route path="cr/grievances" element={<CRGrievances />} />
             <Route path="cr/scan" element={<CRScanPage />} />
+            <Route path="cr/manual-attendance" element={<CRManualAttendance />} />
           </Route>
 
         </Routes>
