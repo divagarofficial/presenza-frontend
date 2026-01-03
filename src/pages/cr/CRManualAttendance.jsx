@@ -1,12 +1,19 @@
 import { useEffect, useState } from "react";
 import api from "../../api/api";
-import Popup from "../../components/Popup"; // ✅ Presenza popup
+import Popup from "../../components/Popup";
 import { FaCheckCircle } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 
 function CRManualAttendance() {
+  const navigate = useNavigate();
+
   const [students, setStudents] = useState([]);
   const [records, setRecords] = useState({});
-  const [popup, setPopup] = useState({ show: false, type: "", message: "" });
+  const [popup, setPopup] = useState({
+    show: false,
+    type: "",
+    message: "",
+  });
   const [loading, setLoading] = useState(true);
 
   /* ---------------- FETCH STUDENTS ---------------- */
@@ -26,30 +33,46 @@ function CRManualAttendance() {
 
   /* ---------------- UPDATE STATUS ---------------- */
   const updateStatus = (roll, status) => {
-    setRecords((prev) => ({ ...prev, [roll]: status }));
+    setRecords((prev) => ({
+      ...prev,
+      [roll]: status,
+    }));
   };
 
   /* ---------------- SUBMIT ---------------- */
   const submitAttendance = async () => {
+    if (Object.keys(records).length === 0) {
+      setPopup({
+        show: true,
+        type: "error",
+        message: "Please mark at least one student as Present or OD",
+      });
+      return;
+    }
+
     const payload = {
       records: Object.entries(records).map(([roll, status]) => ({
         roll_number: roll,
-        status,
+        status: status.toUpperCase(),
       })),
     };
 
     try {
       await api.post("/cr/attendance/daily/manual/bulk", payload);
+
       setPopup({
         show: true,
         type: "success",
-        message: "Manual attendance submitted successfully",
+        message: "Attendance submitted successfully",
       });
-    } catch {
+    } catch (err) {
+      console.error("SUBMIT ERROR:", err?.response?.data || err);
       setPopup({
         show: true,
         type: "error",
-        message: "Attendance submission failed",
+        message:
+          err?.response?.data?.detail ||
+          "Attendance submission failed. Please try again.",
       });
     }
   };
@@ -82,7 +105,9 @@ function CRManualAttendance() {
               type="radio"
               name={s.roll_number}
               checked={records[s.roll_number] === "PRESENT"}
-              onChange={() => updateStatus(s.roll_number, "PRESENT")}
+              onChange={() =>
+                updateStatus(s.roll_number, "PRESENT")
+              }
             />
           </span>
 
@@ -91,7 +116,9 @@ function CRManualAttendance() {
               type="radio"
               name={s.roll_number}
               checked={records[s.roll_number] === "OD"}
-              onChange={() => updateStatus(s.roll_number, "OD")}
+              onChange={() =>
+                updateStatus(s.roll_number, "OD")
+              }
             />
           </span>
         </div>
@@ -109,7 +136,14 @@ function CRManualAttendance() {
         <Popup
           type={popup.type}
           message={popup.message}
-          onClose={() => setPopup({ show: false })}
+          onClose={() => {
+            setPopup({ show: false, type: "", message: "" });
+
+            // ✅ Redirect ONLY after success
+            if (popup.type === "success") {
+              navigate("/student/cr/manual-attendance");
+            }
+          }}
         />
       )}
     </div>
