@@ -966,6 +966,11 @@ button.primary-btn {
   border: 1px solid var(--border);
 }
 
+.status.PRESENT {
+  color: #22c55e;
+  font-weight: 700;
+}
+
 .status.absent {
   color: #ef4444;
   font-weight: 700;

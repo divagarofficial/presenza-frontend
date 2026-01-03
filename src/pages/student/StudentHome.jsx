@@ -53,7 +53,7 @@ useEffect(() => {
   }, []);
 
   const getStatusColor = () => {
-    if (attendanceStatus === "Present") return "#22c55e";
+    if (attendanceStatus === "PRESENT") return "#22c55e";
     if (attendanceStatus === "Absent") return "#ef4444";
     return "#f59e0b";
   };
