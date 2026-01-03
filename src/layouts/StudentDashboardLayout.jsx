@@ -10,6 +10,7 @@ import {
   FaInfoCircle,
   FaUserShield,
   FaClipboardList,
+  FaEdit,
 } from "react-icons/fa";
 import { useState } from "react";
 import presenzaLogo from "../assets/presenza-logo.png";
@@ -80,6 +81,13 @@ function StudentDashboardLayout() {
                   onClick={handleNavClick}
                 >
                   <FaQrcode /> Scan Attendance
+                </NavLink>
+
+                <NavLink
+                  to="/student/cr/manual-attendance"
+                  onClick={handleNavClick}
+                >
+                  <FaEdit /> Manual Attendance
                 </NavLink>
 
                 <NavLink to="/student/cr/od" onClick={handleNavClick}>
