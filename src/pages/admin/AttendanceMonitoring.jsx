@@ -104,7 +104,7 @@ function AttendanceMonitoring() {
       );
 
       doc.text(
-        `Date : ${new Date().toLocaleDateString()}`,
+        `Date : ${new Date().toLocaleDateString("en-GB")}`,
         148,
         62,
         { align: "center" }
@@ -149,7 +149,7 @@ function AttendanceMonitoring() {
       const h = doc.internal.pageSize.height;
       doc.setFontSize(10);
       doc.text(
-        `Report generated on : ${new Date().toLocaleString()}`,
+        `Report generated on : ${new Date().toLocaleDateString("en-GB")}`,
         148,
         h - 30,
         { align: "center" }
