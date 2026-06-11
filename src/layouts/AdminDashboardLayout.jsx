@@ -31,8 +31,8 @@ function AdminDashboardLayout() {
   const handleLogout = () => {
     localStorage.clear();
 
-    // ✅ HARD LOGOUT REDIRECT
-    navigate("/admin/login", { replace: true });
+    // Redirect to home chooser page after logout
+    navigate("/", { replace: true });
   };
 
   return (
@@ -84,9 +84,16 @@ function AdminDashboardLayout() {
               <FaExclamationCircle /> Grievances
             </NavLink>
 
+            <NavLink to="/admin/notifications" onClick={handleNavClick}>
+              <span style={{ position: "relative", display: "inline-flex" }}>
+                🔔 Notifications
+              </span>
+            </NavLink>
+
             <NavLink to="/admin/settings" onClick={handleNavClick}>
               <FaCog /> System Settings
             </NavLink>
+
 
             <NavLink to="/admin/credits" onClick={handleNavClick}>
               <FaInfoCircle /> Credits

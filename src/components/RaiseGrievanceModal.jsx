@@ -1,16 +1,18 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import api from "../api/api";
 import Popup from "./Popup";
 
-function RaiseGrievanceModal({ onClose }) {
+function RaiseGrievanceModal({ onClose, onSubmitSuccess, onError }) {
   const [type, setType] = useState("");
   const [date, setDate] = useState("");
   const [slot, setSlot] = useState("");
   const [desc, setDesc] = useState("");
   const [file, setFile] = useState(null);
-
+  const [submitting, setSubmitting] = useState(false);
   const [popup, setPopup] = useState({ type: "", message: "" });
+  const [previewUrl, setPreviewUrl] = useState(null);
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!type || !date || !desc || !file) {
       setPopup({
         type: "error",
@@ -27,13 +29,69 @@ function RaiseGrievanceModal({ onClose }) {
       return;
     }
 
-    console.log({ type, date, slot, desc, file });
+    const formData = new FormData();
+    formData.append("grievance_type", type);
+    formData.append("request_date", date);
+    if (slot) {
+      formData.append("slot", slot);
+    }
+    formData.append("description", desc);
+    formData.append("proof", file);
 
-    setPopup({
-      type: "success",
-      message: "Grievance submitted successfully",
-    });
+    setSubmitting(true);
+
+    try {
+      await api.post("/students/grievances", formData, {
+        headers: { "Content-Type": undefined },
+      });
+
+      setPopup({
+        type: "success",
+        message: "Grievance submitted successfully",
+      });
+      onSubmitSuccess?.();
+    } catch (error) {
+      console.error("Grievance submission failed", error);
+      const message = error.response?.data?.detail || "Failed to submit grievance";
+      setPopup({ type: "error", message });
+      onError?.(message);
+    } finally {
+      setSubmitting(false);
+    }
   };
+
+  const handleFileChange = (f) => {
+    if (!f) {
+      setFile(null);
+      setPreviewUrl(null);
+      return;
+    }
+
+    const maxSize = 6 * 1024 * 1024; // 6MB
+    if (f.size > maxSize) {
+      setPopup({ type: "error", message: "File is too large (max 6MB)" });
+      setFile(null);
+      setPreviewUrl(null);
+      return;
+    }
+
+    setFile(f);
+
+    if (f.type && f.type.startsWith("image/")) {
+      const url = URL.createObjectURL(f);
+      setPreviewUrl(url);
+    } else {
+      setPreviewUrl(null);
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
 
   return (
     <div className="full-modal">
@@ -76,15 +134,22 @@ function RaiseGrievanceModal({ onClose }) {
         <input
           type="file"
           accept="image/*,.pdf"
-          onChange={(e) => setFile(e.target.files[0])}
+          onChange={(e) => handleFileChange(e.target.files[0])}
         />
 
+        {previewUrl && (
+          <div className="proof-preview">
+            <label>Preview</label>
+            <img src={previewUrl} alt="proof preview" />
+          </div>
+        )}
+
         <div className="modal-actions">
-          <button className="secondary-btn" onClick={onClose}>
+          <button className="secondary-btn" onClick={onClose} disabled={submitting}>
             Cancel
           </button>
-          <button className="primary-btn" onClick={handleSubmit}>
-            Submit
+          <button className="primary-btn" onClick={handleSubmit} disabled={submitting}>
+            {submitting ? "Submitting…" : "Submit"}
           </button>
         </div>
       </div>

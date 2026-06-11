@@ -1,41 +1,62 @@
-import { defineConfig } from "vite";
+import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
+import { VitePWA } from "vite-plugin-pwa";
 
-export default defineConfig({
-  plugins: [react()],
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), "");
+  // Local backend for dev proxy (override in .env.development if needed)
+  const apiTarget = env.VITE_DEV_PROXY_TARGET || "http://127.0.0.1:8000";
 
-  server: {
-    host: true,
-    port: 5173,
+  return {
+    plugins: [
+      react(),
 
-    // ✅ SPA fallback (FIXES REFRESH ISSUE)
-    historyApiFallback: true,
+      VitePWA({
+        registerType: "autoUpdate",
+        devOptions: {
+          enabled: true,
+        },
+        manifest: {
+          name: "Presenza Attendance System",
+          short_name: "Presenza",
+          start_url: "/",
+          display: "standalone",
+          background_color: "#ffffff",
+          theme_color: "#2563eb",
+          description: "Smart QR-based attendance system",
+          icons: [
+            {
+              src: "/icon-192.png",
+              sizes: "192x192",
+              type: "image/png",
+            },
+            {
+              src: "/icon-512.png",
+              sizes: "512x512",
+              type: "image/png",
+            },
+          ],
+        },
+      }),
+    ],
 
-    proxy: {
-      // ✅ AUTH APIs
-      "/auth": {
-        target: "http://192.168.212.188:8000",
-        changeOrigin: true,
-      },
+    server: {
+      host: true,
+      port: 5173,
+      historyApiFallback: true,
 
-      // ✅ CR APIs
-      "/cr": {
-        target: "http://192.168.212.188:8000",
-        changeOrigin: true,
-      },
+      proxy: {
+        "/auth": { target: apiTarget, changeOrigin: true },
+        "/cr": { target: apiTarget, changeOrigin: true },
+        "/students": { target: apiTarget, changeOrigin: true },
+        // IMPORTANT: do NOT proxy /admin to backend.
+        // Admin pages are React routes; proxying them can cause FastAPI 404s on refresh.
+        // "\/admin": { target: apiTarget, changeOrigin: true },
 
-      // ✅ ADMIN APIs (IMPORTANT FIX)
-      "/admin/api": {
-        target: "http://192.168.212.188:8000",
-        changeOrigin: true,
-        rewrite: (path) => path.replace("/admin/api", "/admin"),
-      },
 
-      // ✅ STUDENT APIs
-      "/student/api": {
-        target: "http://192.168.212.188:8000",
-        changeOrigin: true,
+        "/static": { target: apiTarget, changeOrigin: true },
+        "/student/api": { target: apiTarget, changeOrigin: true },
       },
     },
-  },
+  };
 });

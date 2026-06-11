@@ -11,6 +11,7 @@ import {
   FaUserShield,
   FaClipboardList,
   FaEdit,
+  FaCalendarTimes,
 } from "react-icons/fa";
 import { useState } from "react";
 import presenzaLogo from "../assets/presenza-logo.png";
@@ -24,7 +25,7 @@ function StudentDashboardLayout() {
 
   const handleLogout = () => {
     localStorage.clear();
-    navigate("/student/login", { replace: true }); // ✅ HARD REDIRECT
+    navigate("/", { replace: true });
   };
 
   const handleNavClick = () => {
@@ -67,6 +68,13 @@ function StudentDashboardLayout() {
               <FaExclamationCircle /> Grievance
             </NavLink>
 
+            <NavLink to="/student/notifications" onClick={handleNavClick}>
+              <span style={{ position: "relative", display: "inline-flex" }}>
+                🔔 Notifications
+              </span>
+            </NavLink>
+
+
             {/* ===== CR SECTION ===== */}
             {isCR && (
               <>
@@ -94,11 +102,22 @@ function StudentDashboardLayout() {
                   <FaClipboardList /> OD Requests
                 </NavLink>
 
+                <NavLink to="/student/cr/absent" onClick={handleNavClick}>
+                  <FaCalendarTimes /> Absence Requests
+                </NavLink>
+
                 <NavLink to="/student/cr/grievances" onClick={handleNavClick}>
                   <FaExclamationCircle /> Class Grievances
                 </NavLink>
+
+                <NavLink to="/student/cr/notifications" onClick={handleNavClick}>
+                  <span style={{ position: "relative", display: "inline-flex" }}>
+                    🔔 Notifications
+                  </span>
+                </NavLink>
               </>
             )}
+
 
             <NavLink to="/student/credits" onClick={handleNavClick}>
               <FaInfoCircle /> Credits

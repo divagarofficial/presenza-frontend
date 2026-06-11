@@ -7,8 +7,26 @@ import { useNavigate } from "react-router-dom";
 function CRManualAttendance() {
   const navigate = useNavigate();
 
+  // purely for nicer UI; attendance update logic is date-driven
+  const statusLabel = (st) => {
+    const s = (st || "ABSENT").toUpperCase();
+    if (s === "PRESENT") return "Present";
+    if (s === "OD") return "OD";
+    return "Absent";
+  };
+
+
   const [students, setStudents] = useState([]);
   const [records, setRecords] = useState({});
+  const [selectedDate, setSelectedDate] = useState(() => {
+    const now = new Date();
+    const yyyy = now.getFullYear();
+    const mm = String(now.getMonth() + 1).padStart(2, "0");
+    const dd = String(now.getDate()).padStart(2, "0");
+    return `${yyyy}-${mm}-${dd}`;
+  });
+  const [loadingEdit, setLoadingEdit] = useState(false);
+
   const [popup, setPopup] = useState({
     show: false,
     type: "",
@@ -16,20 +34,32 @@ function CRManualAttendance() {
   });
   const [loading, setLoading] = useState(true);
 
-  /* ---------------- FETCH STUDENTS ---------------- */
+  /* ---------------- FETCH EDIT STATE (by date) ---------------- */
   useEffect(() => {
+    setLoadingEdit(true);
     api
-      .get("/cr/attendance/daily/manual/students")
-      .then((res) => setStudents(res.data.students))
+      .get(`/cr/attendance/daily/edit/students?date=${selectedDate}`)
+      .then((res) => {
+        setStudents(res.data.students || []);
+        const next = {};
+        (res.data.students || []).forEach((s) => {
+          next[s.roll_number] = s.status;
+        });
+        setRecords(next);
+      })
       .catch(() =>
         setPopup({
           show: true,
           type: "error",
-          message: "Failed to load students",
+          message: "Failed to load attendance for selected date",
         })
       )
-      .finally(() => setLoading(false));
-  }, []);
+      .finally(() => {
+        setLoading(false);
+        setLoadingEdit(false);
+      });
+  }, [selectedDate]);
+
 
   /* ---------------- UPDATE STATUS ---------------- */
   const updateStatus = (roll, status) => {
@@ -41,29 +71,32 @@ function CRManualAttendance() {
 
   /* ---------------- SUBMIT ---------------- */
   const submitAttendance = async () => {
-    if (Object.keys(records).length === 0) {
+
+    const entries = Object.entries(records);
+    if (entries.length === 0) {
       setPopup({
         show: true,
         type: "error",
-        message: "Please mark at least one student as Present or OD",
+        message: "No attendance records to submit",
       });
       return;
     }
 
     const payload = {
-      records: Object.entries(records).map(([roll, status]) => ({
+      date: selectedDate,
+      records: entries.map(([roll, status]) => ({
         roll_number: roll,
         status: status.toUpperCase(),
       })),
     };
 
     try {
-      await api.post("/cr/attendance/daily/manual/bulk", payload);
+      await api.post("/cr/attendance/daily/edit/bulk", payload);
 
       setPopup({
         show: true,
         type: "success",
-        message: "Attendance submitted successfully",
+        message: "Attendance updated successfully",
       });
     } catch (err) {
       console.error("SUBMIT ERROR:", err?.response?.data || err);
@@ -72,19 +105,49 @@ function CRManualAttendance() {
         type: "error",
         message:
           err?.response?.data?.detail ||
-          "Attendance submission failed. Please try again.",
+          "Attendance update failed. Please try again.",
       });
     }
   };
 
+
   if (loading) return <p className="muted">Loading students…</p>;
+
 
   return (
     <div className="cr-scan-page">
-      <h2>Manual Attendance</h2>
-      <p className="muted">
-        Date: {new Date().toLocaleDateString("en-GB")}
-      </p>
+      <div className="cr-hero" style={{ marginBottom: 16 }}>
+        <div className="cr-badge" style={{ fontSize: 34, marginBottom: 6 }}>
+          ✍️
+        </div>
+        <h2 style={{ marginBottom: 6 }}>Edit Attendance</h2>
+        <p style={{ opacity: 0.95 }}>
+          Choose a date and update Present / OD / Absent for your section.
+        </p>
+      </div>
+
+      <div className="cr-actions" style={{ marginBottom: 14 }}>
+        <div className="summary-card" style={{ width: "100%" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+            <div style={{ fontWeight: 800, color: "var(--secondary)" }}>Selected date</div>
+            <div className="date-chip" style={{ alignSelf: "flex-start" }}>
+              {selectedDate}
+            </div>
+          </div>
+
+          <div style={{ minWidth: 180 }}>
+            <label style={{ display: "block", marginBottom: 6, fontWeight: 700, color: "var(--secondary)" }}>
+              Pick date
+            </label>
+            <input
+              type="date"
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+            />
+          </div>
+        </div>
+      </div>
+
 
       {/* TABLE HEADER */}
       <div className="cr-student-row header">
@@ -92,7 +155,9 @@ function CRManualAttendance() {
         <span>Name</span>
         <span className="center">Present</span>
         <span className="center">OD</span>
+        <span className="center">Absent</span>
       </div>
+
 
       {/* STUDENT LIST */}
       {students.map((s) => (
@@ -103,33 +168,40 @@ function CRManualAttendance() {
           <span className="center">
             <input
               type="radio"
-              name={s.roll_number}
-              checked={records[s.roll_number] === "PRESENT"}
-              onChange={() =>
-                updateStatus(s.roll_number, "PRESENT")
-              }
+              name={`status-${s.roll_number}`}
+              checked={(records[s.roll_number] || "ABSENT") === "PRESENT"}
+              onChange={() => updateStatus(s.roll_number, "PRESENT")}
             />
           </span>
 
           <span className="center">
             <input
               type="radio"
-              name={s.roll_number}
-              checked={records[s.roll_number] === "OD"}
-              onChange={() =>
-                updateStatus(s.roll_number, "OD")
-              }
+              name={`status-${s.roll_number}`}
+              checked={(records[s.roll_number] || "ABSENT") === "OD"}
+              onChange={() => updateStatus(s.roll_number, "OD")}
+            />
+          </span>
+
+          <span className="center">
+            <input
+              type="radio"
+              name={`status-${s.roll_number}`}
+              checked={(records[s.roll_number] || "ABSENT") === "ABSENT"}
+              onChange={() => updateStatus(s.roll_number, "ABSENT")}
             />
           </span>
         </div>
       ))}
 
+
       {/* SUBMIT BUTTON */}
       <div className="cr-actions">
-        <button className="primary-btn" onClick={submitAttendance}>
-          <FaCheckCircle /> Submit Attendance
+        <button className="primary-btn" onClick={submitAttendance} disabled={loadingEdit}>
+          <FaCheckCircle /> {loadingEdit ? "Loading…" : "Update Attendance"}
         </button>
       </div>
+
 
       {/* POPUP */}
       <Popup

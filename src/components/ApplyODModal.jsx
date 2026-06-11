@@ -19,7 +19,7 @@ function ApplyODModal({ onClose, onSubmit }) {
     );
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!category) {
       return setPopup({
         type: "error",
@@ -48,17 +48,33 @@ function ApplyODModal({ onClose, onSubmit }) {
       });
     }
 
-    onSubmit({
-      category,
-      slots: category === "slot" ? slots : "FULL_DAY",
-      reason,
-      proof,
-    });
+    try {
+      await onSubmit({
+        category,
+        slots: category === "slot" ? slots : "FULL_DAY",
+        reason,
+        proof,
+      });
+      setPopup({
+        type: "success",
+        message: "OD applied successfully",
+      });
+    } catch (e) {
+      const status = e?.response?.status;
+      const d = e?.response?.data?.detail;
+      let message =
+        typeof d === "string"
+          ? d
+          : Array.isArray(d)
+            ? d.map((x) => x.msg || String(x)).join(", ")
+            : "Failed to submit OD";
 
-    setPopup({
-      type: "success",
-      message: "OD applied successfully",
-    });
+      if (status === 404 && (!d || d === "Not Found")) {
+        message =
+          "Server returned 404. Start the API (uvicorn on port 8000), restart npm run dev, or set VITE_API_URL to your API base (e.g. http://127.0.0.1:8000).";
+      }
+      setPopup({ type: "error", message });
+    }
   };
 
   return (

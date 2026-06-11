@@ -67,7 +67,7 @@ useEffect(() => {
       {/* HEADER */}
       <div className="student-home-header">
         <div>
-          <h2>Welcome, {student.name} 👋</h2>
+          <h2>Welcome, {student.name} </h2>
           <p className="muted">{student.roll_number}</p>
         </div>
       </div>

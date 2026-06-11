@@ -73,11 +73,20 @@ function SemesterManagement() {
     try {
       setLoading(true);
 
-      await api.post("/admin/semester/reset");
+      // After reset, optionally advance all students by +1 year.
+      const wantsYearAdvance = window.confirm(
+        "Reset completed. Do you want to update student years (e.g., II → III)?"
+      );
+
+      if (wantsYearAdvance) {
+        await api.post("/admin/semester/reset/advance-year");
+      }
 
       setPopup({
         type: "success",
-        message: "Semester reset completed successfully",
+        message: wantsYearAdvance
+          ? "Semester reset completed and years advanced successfully"
+          : "Semester reset completed successfully",
       });
     } catch (err) {
       setPopup({
@@ -90,6 +99,7 @@ function SemesterManagement() {
       setLoading(false);
     }
   };
+
 
   return (
     <div className="admin-page">

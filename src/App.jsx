@@ -20,6 +20,7 @@ import Credits from "./pages/Credits";
 import CRDashboard from "./pages/cr/CRDashboard";
 import CRScanAttendance from "./pages/cr/CRScanAttendance";
 import CRODApproval from "./pages/cr/CRODApproval";
+import CRAbsentApproval from "./pages/cr/CRAbsentApproval";
 import CRGrievances from "./pages/cr/CRGrievances";
 import CRScanPage from "./pages/cr/CRScanPage";
 import CRManualAttendance from "./pages/cr/CRManualAttendance";
@@ -34,8 +35,11 @@ import TimetableManagement from "./pages/admin/TimetableManagement";
 import CRControl from "./pages/admin/CRControl";
 import AttendanceMonitoring from "./pages/admin/AttendanceMonitoring";
 import AdminGrievances from "./pages/admin/AdminGrievances";
-import SystemConfiguration from "./pages/admin/SystemConfiguration";  
+import SystemConfiguration from "./pages/admin/SystemConfiguration";
+import NotificationsAdmin from "./pages/admin/Notifications";
+import NotificationsStudent from "./pages/student/Notifications";
 // (we’ll add more admin pages later)
+
 
 function App() {
   return (
@@ -58,24 +62,16 @@ function App() {
             <Route path="students" element={<StudentRegister />} />
             <Route path="admin-qr" element={<AdminDynamicQR />} />
             <Route path="timetable" element={<TimetableManagement />} />
+            <Route path="semester" element={<SemesterManagement />} />
             <Route path="cr-control" element={<CRControl />} />
             <Route path="attendance-monitoring" element={<AttendanceMonitoring />} />
             <Route path="grievances" element={<AdminGrievances />} />
             <Route path="settings" element={<SystemConfiguration />} />
-
-
-
-            {/* placeholders – will build later */}
-            <Route path="qr" element={<div>Dynamic QR</div>} />
-            <Route path="timetable" element={<div>Timetable</div>} />
-            <Route path="semester" element={<SemesterManagement />} />
-            <Route path="cr-control" element={<div>CR Control</div>} />
-            <Route path="attendance" element={<div>Attendance Monitor</div>} />
-            <Route path="grievances" element={<div>Grievances</div>} />
-            <Route path="audit" element={<div>Audit & Reports</div>} />
-            <Route path="settings" element={<div>System Settings</div>} />
             <Route path="credits" element={<Credits />} />
+            <Route path="notifications" element={<NotificationsAdmin />} />
+
           </Route>
+
 
           {/* ================= STUDENT + CR ================= */}
           <Route path="/student" element={<StudentDashboardLayout />}>
@@ -89,12 +85,15 @@ function App() {
             <Route path="qr" element={<MyQR />} />
             <Route path="grievance" element={<Grievance />} />
             <Route path="credits" element={<Credits />} />
+            <Route path="notifications" element={<NotificationsStudent />} />
 
             {/* CR */}
+
             <Route path="cr/dashboard" element={<CRDashboard />} />
             <Route path="cr/scan-attendance" element={<CRScanAttendance />} />
             
             <Route path="cr/od" element={<CRODApproval />} />
+            <Route path="cr/absent" element={<CRAbsentApproval />} />
             <Route path="cr/grievances" element={<CRGrievances />} />
             <Route path="cr/scan" element={<CRScanPage />} />
             <Route path="cr/manual-attendance" element={<CRManualAttendance />} />

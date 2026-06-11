@@ -4,7 +4,8 @@ import {
   FaExclamationTriangle,
   FaClock,
   FaShieldAlt,
-  FaEdit, // ✅ NEW ICON
+  FaEdit,
+  FaCalendarTimes,
 } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
@@ -19,6 +20,7 @@ function CRDashboard() {
     total_students: 0,
     marked: 0,
     pending_od: 0,
+    pending_absent: 0,
     open_grievances: 0,
     last_scan: "—",
   });
@@ -65,6 +67,11 @@ function CRDashboard() {
           <p>OD Requests</p>
         </div>
 
+        <div className="cr-stat warning">
+          <span>{data.pending_absent}</span>
+          <p>Absence Requests</p>
+        </div>
+
         <div className="cr-stat danger">
           <span>{data.open_grievances}</span>
           <p>Open Grievances</p>
@@ -98,6 +105,14 @@ function CRDashboard() {
         >
           <FaClipboardCheck />
           <span>Approve OD</span>
+        </div>
+
+        <div
+          className="cr-action-card"
+          onClick={() => navigate("/student/cr/absent")}
+        >
+          <FaCalendarTimes />
+          <span>Absence Requests</span>
         </div>
 
         {/* View Grievances */}

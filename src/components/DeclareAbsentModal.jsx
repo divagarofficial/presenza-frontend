@@ -17,7 +17,7 @@ function DeclareAbsentModal({ slots, onClose, onSubmit }) {
     );
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!category) {
       return setPopup({
         type: "error",
@@ -39,31 +39,44 @@ function DeclareAbsentModal({ slots, onClose, onSubmit }) {
       });
     }
 
-    
-
-    // ✅ SUCCESS
-    onSubmit({
-      category,
-      slots: category === "slot" ? selectedSlots : "FULL_DAY",
-      reason,
-      proof,
-    });
-
-    setPopup({
-      type: "success",
-      message: "Absent declared successfully",
-    });
+    try {
+      await onSubmit({
+        category,
+        slots: category === "slot" ? selectedSlots : "FULL_DAY",
+        reason,
+        proof,
+      });
+      setPopup({
+        type: "success",
+        message: "Absence request submitted. Awaiting CR approval.",
+      });
+    } catch (e) {
+      const status = e?.response?.status;
+      const d = e?.response?.data?.detail;
+      let message =
+        typeof d === "string"
+          ? d
+          : Array.isArray(d)
+            ? d.map((x) => x.msg || String(x)).join(", ")
+            : "Failed to submit absence request";
+      if (status === 404 && (!d || d === "Not Found")) {
+        message =
+          "Server returned 404. Check that the API is running and VITE_API_URL / dev proxy is configured.";
+      }
+      setPopup({ type: "error", message });
+    }
   };
 
   return (
     <div className="modal-fullscreen">
       <div className="modal-header">
         <h2>Declare Absence</h2>
-        <button className="close-btn" onClick={onClose}>✕</button>
+        <button type="button" className="close-btn" onClick={onClose}>
+          ✕
+        </button>
       </div>
 
       <div className="modal-body">
-        {/* CATEGORY */}
         <div className="form-group">
           <label>Absence Category *</label>
           <div className="radio-group">
@@ -91,26 +104,31 @@ function DeclareAbsentModal({ slots, onClose, onSubmit }) {
           </div>
         </div>
 
-        {/* SLOT SELECTION */}
         {category === "slot" && (
           <div className="form-group">
             <label>Select Slots *</label>
             <div className="slot-checkboxes">
-              {slots.map((s, i) => (
-                <label key={i}>
-                  <input
-                    type="checkbox"
-                    checked={selectedSlots.includes(s.slot)}
-                    onChange={() => toggleSlot(s.slot)}
-                  />
-                  {s.slot} – {s.subject}
-                </label>
-              ))}
+              {slots.length === 0 ? (
+                <p className="muted">
+                  No timetable slots loaded. Open this page when slots are
+                  available, or choose Full Day.
+                </p>
+              ) : (
+                slots.map((s, i) => (
+                  <label key={`${s.slot}-${i}`}>
+                    <input
+                      type="checkbox"
+                      checked={selectedSlots.includes(s.slot)}
+                      onChange={() => toggleSlot(s.slot)}
+                    />
+                    {s.slot} – {s.subject}
+                  </label>
+                ))
+              )}
             </div>
           </div>
         )}
 
-        {/* REASON */}
         <div className="form-group">
           <label>Reason *</label>
           <textarea
@@ -120,31 +138,26 @@ function DeclareAbsentModal({ slots, onClose, onSubmit }) {
           />
         </div>
 
-        {/* PROOF */}
         <div className="form-group">
           <label>Attach Proof (Optional)</label>
           <input
             type="file"
             accept=".pdf,image/*"
-            onChange={(e) => setProof(e.target.files[0])}
+            onChange={(e) => setProof(e.target.files?.[0] || null)}
           />
-          {proof && (
-            <small>Selected: {proof.name}</small>
-          )}
+          {proof && <small>Selected: {proof.name}</small>}
         </div>
       </div>
 
-      {/* FOOTER */}
       <div className="modal-footer">
-        <button className="secondary-btn" onClick={onClose}>
+        <button type="button" className="secondary-btn" onClick={onClose}>
           Cancel
         </button>
-        <button className="primary-btn" onClick={handleSubmit}>
+        <button type="button" className="primary-btn" onClick={handleSubmit}>
           Submit
         </button>
       </div>
 
-      {/* PRESENZA POPUP */}
       <Popup
         type={popup.type}
         message={popup.message}

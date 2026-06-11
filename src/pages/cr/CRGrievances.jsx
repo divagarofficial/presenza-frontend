@@ -1,136 +1,144 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import api from "../../api/api";
+import Popup from "../../components/Popup";
 
 function CRGrievances() {
-  /* ===== MOCK DATA (BACKEND LATER) ===== */
-  const grievances = [
-    {
-      id: 1,
-      roll: "21AD001",
-      name: "Arjun",
-      type: "Slot",
-      date: "2025-12-12",
-      slot: "Slot 3",
-      reason: "Attendance not marked",
-      description:
-        "I was present but my attendance was not marked due to QR issue.",
-      attachment:
-        "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
-      status: "Open",
-    },
-    {
-      id: 2,
-      roll: "21AD014",
-      name: "Meena",
-      type: "Daily",
-      date: "2025-12-10",
-      reason: "OD not reflected",
-      description:
-        "My OD was approved but attendance still shows absent.",
-      attachment:
-        "https://via.placeholder.com/600x400",
-      status: "Under Review",
-    },
-  ];
-
+  const [grievances, setGrievances] = useState([]);
   const [selected, setSelected] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [popup, setPopup] = useState({ type: "", message: "" });
 
-  const formatDate = (d) => {
-    const [y, m, day] = d.split("-");
-    return `${day}-${m}-${y}`;
+  const fetchGrievances = async () => {
+    setLoading(true);
+    try {
+      const res = await api.get("/cr/grievances");
+      setGrievances(res.data.requests || []);
+    } catch (error) {
+      console.error("Failed to load grievances", error);
+      setPopup({
+        type: "error",
+        message: error.response?.data?.detail || "Could not load grievances",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
+
+  useEffect(() => {
+    fetchGrievances();
+  }, []);
+
+  const formatDate = (dateInput) => {
+    if (!dateInput) return "";
+    try {
+      const dt = new Date(dateInput);
+      if (!isNaN(dt)) {
+        const day = String(dt.getDate()).padStart(2, "0");
+        const month = String(dt.getMonth() + 1).padStart(2, "0");
+        const year = dt.getFullYear();
+        return `${day}-${month}-${year}`;
+      }
+    } catch (e) {}
+
+    const raw = String(dateInput).split("T")[0];
+    const parts = raw.split("-");
+    if (parts.length >= 3) return `${parts[2].padStart(2, "0")}-${parts[1].padStart(2, "0")}-${parts[0]}`;
+    return String(dateInput);
+  };
+
 
   return (
     <div className="cr-grievance-page">
       <h2>Class Grievances</h2>
-      <p className="muted">
-        View grievances raised by students in your class
-      </p>
+      <p className="muted">View grievances raised by students in your class</p>
 
-      {/* LIST */}
-      <div className="grievance-list">
-        {grievances.map((g) => (
-          <div key={g.id} className="grievance-card">
-            <div>
-              <strong>
-                {g.roll} – {g.name}
-              </strong>
-              <p className="muted">
-                {g.type}
-                {g.slot && ` • ${g.slot}`} •{" "}
-                {formatDate(g.date)}
-              </p>
-              <p>{g.reason}</p>
+      {loading ? (
+        <div className="muted">Loading grievances…</div>
+      ) : grievances.length === 0 ? (
+        <p className="muted">No grievances have been submitted yet.</p>
+      ) : (
+        <div className="grievance-list">
+          {grievances.map((g) => (
+            <div key={g.id} className="grievance-card">
+              <div>
+                <strong>
+                  {g.roll_number} – {g.name}
+                </strong>
+                <p className="muted">
+                  {g.grievance_type}
+                  {g.slot && ` • ${g.slot}`} • {formatDate(g.request_date)}
+                </p>
+                <p>{g.description}</p>
+              </div>
+
+              <div className="grievance-right">
+                <span className={`status ${g.status.toLowerCase().replace(/ /g, "-")}`}>
+                  {g.status}
+                </span>
+                <button className="secondary-btn small" onClick={() => setSelected(g)}>
+                  View
+                </button>
+              </div>
             </div>
+          ))}
+        </div>
+      )}
 
-            <div className="grievance-right">
-              <span className={`status ${g.status.toLowerCase()}`}>
-                {g.status}
-              </span>
-              <button
-                className="secondary-btn small"
-                onClick={() => setSelected(g)}
-              >
-                View
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* DETAILS MODAL */}
       {selected && (
         <div className="full-modal">
           <div className="modal-content">
             <h3>Grievance Details</h3>
 
             <p>
-              <strong>{selected.roll}</strong> –{" "}
-              {selected.name}
+              <strong>{selected.roll_number}</strong> – {selected.name}
             </p>
 
             <p>
-              {selected.type}
-              {selected.slot && ` (${selected.slot})`} •{" "}
-              {formatDate(selected.date)}
+              {selected.grievance_type}
+              {selected.slot && ` (${selected.slot})`} • {formatDate(selected.request_date)}
             </p>
 
             <p className="muted">{selected.description}</p>
 
-            {/* ATTACHMENT */}
-            <div className="grievance-proof">
-              <label>Attachment</label>
-              {selected.attachment.endsWith(".pdf") ? (
+            {selected.proof_url && (
+              <div className="grievance-proof">
+                <label>Attachment</label>
                 <a
-                  href={selected.attachment}
+                  href={selected.proof_url}
                   target="_blank"
                   rel="noreferrer"
                   className="proof-link"
                 >
-                  📄 View Document
+                  View uploaded proof
                 </a>
-              ) : (
-                <img
-                  src={selected.attachment}
-                  alt="Proof"
-                  className="proof-image"
-                  onClick={() =>
-                    window.open(selected.attachment, "_blank")
-                  }
-                />
-              )}
-            </div>
+              </div>
+            )}
+
+            {selected.review_remarks && (
+              <p className="muted" style={{ marginTop: 10 }}>
+                <strong>Admin remarks:</strong> {selected.review_remarks}
+              </p>
+            )}
+
+            <p className="muted" style={{ marginTop: 12 }}>
+              Only the class admin can update grievance status.
+            </p>
 
             <div className="modal-actions">
-              <button
-                className="primary-btn"
-                onClick={() => setSelected(null)}
-              >
+              <button className="secondary-btn" onClick={() => setSelected(null)}>
                 Close
               </button>
             </div>
           </div>
         </div>
       )}
+
+      <Popup
+        type={popup.type}
+        message={popup.message}
+        actionText="OK"
+        onAction={() => setPopup({ type: "", message: "" })}
+      />
     </div>
   );
 }
