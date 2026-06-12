@@ -85,7 +85,7 @@ function Reports() {
     return String(dateInput);
   };
 
-  const getRequestStatus = (status) => {
+const getRequestStatus = (status) => {
     const normalized = (status || "").toUpperCase();
 
     if (normalized === "PENDING") {
@@ -305,7 +305,13 @@ function Reports() {
 
                 <span
                   className={`status ${
-                    item.status === "OD" ? "od" : "absent"
+                    item.status === "Present"
+                      ? "present"
+                      : item.status === "OD" || item.status === "OD (Approved)"
+                        ? "od"
+                        : item.status === "Absent" || item.status === "Absent (Approved)"
+                          ? "absent"
+                          : "absent"
                   }`}
                 >
                   {item.status}

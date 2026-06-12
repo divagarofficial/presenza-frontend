@@ -51,21 +51,43 @@ api.interceptors.response.use(
     // If server says token is invalid/expired, frontend redirects anyway.
     if (status === 401) {
 
-      // Clear token and redirect to an appropriate login page
-      try {
-        localStorage.removeItem("token");
-      } catch {
-        // ignore
+      // Try silent refresh once; if it fails then redirect to login.
+      const doRedirect = () => {
+        try {
+          localStorage.removeItem("token");
+          localStorage.removeItem("refresh_token");
+        } catch {
+          // ignore
+        }
+        const path = window.location.pathname || "/";
+        if (path.startsWith("/admin")) {
+          window.location.href = "/admin/login";
+        } else {
+          window.location.href = "/student/login";
+        }
+      };
+
+      if (error?.config && !error.config.__isRetryRequest) {
+        const refreshToken = localStorage.getItem("refresh_token");
+        if (refreshToken) {
+          error.config.__isRetryRequest = true;
+          return api
+            .post("/auth/refresh", { refresh_token: refreshToken })
+            .then((r) => {
+              const newAccess = r.data.access_token;
+              const newRefresh = r.data.refresh_token || refreshToken;
+              localStorage.setItem("token", newAccess);
+              if (newRefresh) localStorage.setItem("refresh_token", newRefresh);
+              error.config.headers.Authorization = `Bearer ${newAccess}`;
+              return api.request(error.config);
+            })
+            .catch(() => doRedirect());
+        }
       }
 
-      const path = window.location.pathname || "/";
-      if (path.startsWith("/admin")) {
-        window.location.href = "/admin/login";
-      } else {
-        // student and CR pages use student login
-        window.location.href = "/student/login";
-      }
+      doRedirect();
     }
+
 
     return Promise.reject(error);
   }

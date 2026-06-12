@@ -24,7 +24,11 @@ function StudentDashboardLayout() {
   );
 
   const handleLogout = () => {
-    localStorage.clear();
+    localStorage.removeItem("token");
+    localStorage.removeItem("refresh_token");
+    localStorage.removeItem("is_cr");
+    localStorage.removeItem("roll_number");
+    localStorage.removeItem("student_id");
     navigate("/", { replace: true });
   };
 

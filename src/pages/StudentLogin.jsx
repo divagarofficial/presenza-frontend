@@ -41,6 +41,9 @@ function StudentLogin() {
 
       // ✅ Save token
       localStorage.setItem("token", token);
+      // ✅ Save refresh token (for staying logged in)
+      localStorage.setItem("refresh_token", res.data.refresh_token);
+
 
       // ✅ Decode JWT
       const decoded = jwtDecode(token);

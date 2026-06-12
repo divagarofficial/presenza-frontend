@@ -49,6 +49,7 @@ function App() {
 
           {/* ================= PUBLIC ================= */}
           <Route path="/" element={<Home />} />
+          <Route path="/dashboard" element={<Navigate to="/student" replace />} />
           <Route path="/admin/login" element={<AdminLogin />} />
           <Route path="/admin/register" element={<AdminRegister />} />
           <Route path="/student/login" element={<StudentLogin />} />

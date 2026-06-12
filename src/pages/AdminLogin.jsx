@@ -41,6 +41,9 @@ function AdminLogin() {
       );
 
       localStorage.setItem("token", res.data.access_token);
+      // ✅ Save refresh token (for staying logged in)
+      localStorage.setItem("refresh_token", res.data.refresh_token);
+
 
       setPopup({
         type: "success",
