@@ -175,8 +175,41 @@ function AttendanceMonitoring() {
   const exportExcel = () =>
     setPopup({ type: "warning", message: "Excel export will be enabled soon" });
 
-  const declareHoliday = () =>
-    setPopup({ type: "warning", message: "Holiday declaration will be enabled soon" });
+  const [showHolidayModal, setShowHolidayModal] = useState(false);
+  const [holidayDate, setHolidayDate] = useState("");
+  const [holidayReason, setHolidayReason] = useState("");
+
+  const openHolidayModal = () => {
+    setHolidayDate("");
+    setHolidayReason("");
+    setShowHolidayModal(true);
+  };
+
+  const submitHoliday = async () => {
+    try {
+      if (!holidayDate) {
+        setPopup({ type: "error", message: "Holiday date is required" });
+        return;
+      }
+
+      await api.post("/admin/attendance/holiday/declare", {
+        holiday_date: holidayDate,
+        reason: holidayReason || null,
+      });
+
+      setPopup({
+        type: "success",
+        message: "Holiday declared successfully",
+      });
+
+      setShowHolidayModal(false);
+    } catch (e) {
+      const msg =
+        e?.response?.data?.detail || "Failed to declare holiday";
+      setPopup({ type: "error", message: msg });
+    }
+  };
+
 
   return (
     <div className="admin-page">
@@ -184,9 +217,10 @@ function AttendanceMonitoring() {
       <p className="muted">Live section-wise attendance overview</p>
 
       <div className="admin-actions spaced">
-        <button className="danger-btn" onClick={declareHoliday}>
+        <button className="danger-btn" onClick={openHolidayModal}>
           <FaCalendarTimes /> Declare Holiday
         </button>
+
         <div className="export-actions">
           <button className="secondary-btn" onClick={exportPDF}>
             <FaFilePdf /> Export PDF
@@ -227,12 +261,74 @@ function AttendanceMonitoring() {
         </div>
       )}
 
+      {showHolidayModal && (
+        <div
+          className="modal-overlay"
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.35)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 9999,
+          }}
+          onClick={() => setShowHolidayModal(false)}
+        >
+          <div
+            className="modal"
+            style={{
+              background: "#fff",
+              padding: "1.25rem",
+              borderRadius: "12px",
+              width: "min(520px, 92vw)",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 style={{ marginTop: 0 }}>Declare Holiday</h3>
+
+            <div style={{ display: "grid", gap: "0.75rem" }}>
+              <label style={{ display: "grid", gap: "0.25rem" }}>
+                <span>Holiday date</span>
+                <input
+                  type="date"
+                  value={holidayDate}
+                  onChange={(e) => setHolidayDate(e.target.value)}
+                  style={{ padding: "0.5rem" }}
+                />
+              </label>
+
+              <label style={{ display: "grid", gap: "0.25rem" }}>
+                <span>Reason (optional)</span>
+                <textarea
+                  value={holidayReason}
+                  onChange={(e) => setHolidayReason(e.target.value)}
+                  placeholder="Enter reason (optional)"
+                  rows={3}
+                  style={{ padding: "0.5rem" }}
+                />
+              </label>
+            </div>
+
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.5rem", marginTop: "1rem" }}>
+              <button className="secondary-btn" onClick={() => setShowHolidayModal(false)}>
+                Cancel
+              </button>
+              <button className="primary-btn" onClick={submitHoliday}>
+                Declare
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <Popup
         type={popup.type}
         message={popup.message}
         actionText="OK"
         onAction={() => setPopup({ type: "", message: "" })}
       />
+
     </div>
   );
 }

@@ -74,7 +74,7 @@ function Credits() {
       </p>
 
       <p style={{ fontSize: "16px", fontWeight: "500" }}>
-        DIVAGAR E
+        THIRUMALAI D
       </p>
       <p
         style={{
@@ -83,7 +83,7 @@ function Credits() {
           marginBottom: "48px",
         }}
       >
-        THIRUMALAI D
+        DIVAGAR E
       </p>
 
       {/* COPYRIGHT */}
